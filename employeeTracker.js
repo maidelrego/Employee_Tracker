@@ -109,8 +109,44 @@ function addEmployee(){
       first_name: response.first_name,
       last_name: response.last_name
     })
+
+    connection.query("SELECT title FROM role", function(err, results) {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "choice",
+            type: "rawlist",
+            message: "What is the Employee's Role?",
+            choices: function() {
+              var choiceArray = [];
+              for (var i = 0; i < results.length; i++) {
+                choiceArray.push(results[i].title);
+              }
+              return choiceArray;
+            }
+            
+          }
+        ])
+        .then(function(answer) {
+          connection.query(
+            "UPDATE employee SET ? WHERE ?",
+            [
+              {
+                role_id: answer.choice
+              },
+              {
+                id: choice.id
+              }
+            ],
+           
+          );
+        });
+    });
       
   })
+
+  
 
 
 };
