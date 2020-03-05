@@ -90,6 +90,28 @@ function employeeByManager(){
 };
 
 function addEmployee(){
+  inquirer
+    .prompt([
+      {
+        name: "first_name",
+        type: "input",
+        message: "What is the Employee's First Name?"
+      },
+
+      {
+        name: "last_name",
+        type: "input",
+        message: "What is the Employee's Last Name?"
+      },
+
+  ]).then(response => {
+    connection.query("INSERT INTO employee SET ?", {
+      first_name: response.first_name,
+      last_name: response.last_name
+    })
+      
+  })
+
 
 };
 
