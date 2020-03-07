@@ -90,6 +90,15 @@ function employeeByManager(){
 };
 
 function addEmployee(){
+  
+  // do query to get roles
+  // then
+    // do query to get managers
+    // then
+      // ask for first name and last name, and role, and manager
+      // then
+        // insert the employee
+
   inquirer
     .prompt([
       {
@@ -104,50 +113,59 @@ function addEmployee(){
         message: "What is the Employee's Last Name?"
       },
 
-  ]).then(response => {
-    connection.query("INSERT INTO employee SET ?", {
-      first_name: response.first_name,
-      last_name: response.last_name
-    })
-
-    connection.query("SELECT title FROM role", function(err, results) {
-      if (err) throw err;
-      inquirer
-        .prompt([
-          {
-            name: "choice",
-            type: "rawlist",
-            message: "What is the Employee's Role?",
-            choices: function() {
-              var choiceArray = [];
-              for (var i = 0; i < results.length; i++) {
-                choiceArray.push(results[i].title);
+    ])
+    .then(nameresponse => {
+      connection.query("SELECT title FROM role", function (err, results) {
+        if (err) throw err;
+        inquirer
+          .prompt([
+            {
+              name: "choice",
+              type: "rawlist",
+              message: "What is the Employee's Role?",
+              choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < results.length; i++) {
+                  choiceArray.push(results[i].title);
+                }
+                return choiceArray;
               }
-              return choiceArray;
+
             }
-            
-          }
-        ])
-        .then(function(answer) {
-          connection.query(
-            "UPDATE employee SET ? WHERE ?",
-            [
-              {
-                role_id: answer.choice
-              },
-              {
-                id: choice.id
-              }
-            ],
-           
-          );
-        });
+          ]).then(department => {
+            connection.query("SELECT * FROM employee WHERE role_id = 'Manager'", function (err, results) {
+              if (err) throw err;
+              inquirer
+                .prompt([
+                  {
+                    name: "choice",
+                    type: "rawlist",
+                    message: "What is the Employee's Manager?",
+                    choices: function () {
+                      var choiceArray = [];
+                      for (var i = 0; i < results.length; i++) {
+                        choiceArray.push(results[i].first_name + " " + results[i].last_name);
+                        console.log(choiceArray);
+                      }
+                      return choiceArray;
+                    }
+
+                  }
+                ]).then(function(roleanswer) {
+                  console.log(roleanswer)
+                  connection.query("INSERT INTO employee SET ?", {
+                    first_name: nameresponse.first_name,
+                    last_name: nameresponse.last_name,
+                    role_id: department.choice,
+                    manager_id: roleanswer.choice 
+                  })
+                  connection.end()
+                });
+            })
+          })
     });
-      
-  })
-
+  }) 
   
-
 
 };
 
