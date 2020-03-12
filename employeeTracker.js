@@ -33,71 +33,122 @@ function start() {
         type: "list",
         message: "What would you like to do?",
         choices: [
-            "View all Employees", 
-            "View all Employees by Deparment", 
-            "View all Employees by Manager", 
-            "Add Employee", 
-            "Remove Employee", 
-            "Update Employee Role", 
-            "Update Employee Manager"
+          "View all Department",
+          "View all Roles",
+          "View all Employees",
+          "Add a New Department",
+          "Add a New Role",
+          "Add Employee",
+          "Update Employee Role"
         ]
       })
       .then(function(answer){
 
         switch (answer.menu) {
-            case "View all Employees":
+            case "View all Department":
+              viewDepartment();
+              break;
+
+              case "View all Roles":
+              viewRole();
+              break;
+              case "View all Employees":
               viewEmployees();
               break;
       
-            case "View all Employees by Deparment":
-              employeeByDeparment();
+            case "Add a New Department":
+              addDepartment();
               break;
       
-            case "View all Employees by Manager":
-              employeeByManager();
+            case "Add a New Role":
+              addRole();
               break;
       
             case "Add Employee":
               addEmployee();
               break;
-      
-            case "Remove Employee":
-              removeEmployee();
-              break;
 
             case "Update Employee Role":
                 updateRole();
-                break;
-
-                case "Update Employee Manager":
-                updateManager();
                 break;
             }
       })
 
     }
 
+function viewDepartment(){
+connection.query("SELECT name FROM department", function(err, results){
+  if(err){throw err};
+  console.table(results);
+  start()
+})
+
+};
+
+function viewRole(){
+  connection.query("SELECT title, salary FROM role", function(err, results){
+    if(err){throw err};
+    console.table(results);
+    start()
+  })
+
+};
+
 function viewEmployees(){
+  connection.query("SELECT * FROM employee", function(err, results){
+    if(err){throw err};
+    console.table(results);
+    start()
+  })
+};
+
+function addDepartment(){
+ 
+  inquirer
+  .prompt({
+    name: "addDept",
+    type: "input",
+    message: "Enter the name of the new Department"
+  }).then(deptRes=>{
+    connection.query("INSERT INTO department SET ?", {
+      name: deptRes.addDept
+    })
+    start();
+  })
 
 };
 
-function employeeByDeparment(){
+
+
+function addRole() {
+
+  inquirer
+    .prompt([
+      {
+        name: "addRo",
+        type: "input",
+        message: "Enter the name of the new Role"
+      },
+
+      {
+        name: "addSal",
+        type: "input",
+        message: "Enter the Anual Salary for this Role"
+      }
+
+    ]).then(deptRes => {
+      console.log(deptRes)
+      connection.query("INSERT INTO role SET ?", {
+        title: deptRes.addRo,
+        salary: deptRes.addSal,
+      })
+      start();
+    })
 
 };
 
-function employeeByManager(){
 
-};
-
-function addEmployee(){
-  
-  // do query to get roles
-  // then
-    // do query to get managers
-    // then
-      // ask for first name and last name, and role, and manager
-      // then
-        // insert the employee
+function addEmployee() {
 
   inquirer
     .prompt([
@@ -111,7 +162,7 @@ function addEmployee(){
         name: "last_name",
         type: "input",
         message: "What is the Employee's Last Name?"
-      },
+      }
 
     ])
     .then(nameresponse => {
@@ -151,34 +202,87 @@ function addEmployee(){
                     }
 
                   }
-                ]).then(function(roleanswer) {
+                ]).then(function (roleanswer) {
                   console.log(roleanswer)
                   connection.query("INSERT INTO employee SET ?", {
                     first_name: nameresponse.first_name,
                     last_name: nameresponse.last_name,
                     role_id: department.choice,
-                    manager_id: roleanswer.choice 
+                    manager_id: roleanswer.choice
                   })
-                  connection.end()
+                  start();
                 });
             })
           })
-    });
-  }) 
-  
-
-};
-
-function removeEmployee(){
-
+      });
+    })
 };
 
 function updateRole(){
+  connection.query("SELECT * FROM employee", function(err, results) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "choice",
+          type: "rawlist",
+          choices: function() {
+            var choiceArray = [];
+            for (var i = 0; i < results.length; i++) {
+              choiceArray.push(results[i].first_name);
+            }
+            return choiceArray;
+          },
+          message: "What Employee would you like to update role to?"
+        },
+        {
+          name: "choiceRole",
+          type: "rawlist",
+          choices: function() {
+            var choiceArray = [];
+            for (var i = 0; i < results.length; i++) {
+              choiceArray.push(results[i].item_name);
+            }
+            return choiceArray;
+          },
+        }
+      ])
+      .then(function(answer) {
+        var chosenEmployee;
+        for (var i = 0; i < results.length; i++) {
+          if (results[i].item_name === answer.choice) {
+            chosenEmployee = results[i];
+          }
+        }
 
+        // determine if bid was high enough
+        if (chosenItem.highest_bid < parseInt(answer.bid)) {
+          // bid was high enough, so update db, let the user know, and start over
+          connection.query(
+            "UPDATE auctions SET ? WHERE ?",
+            [
+              {
+                highest_bid: answer.bid
+              },
+              {
+                id: chosenItem.id
+              }
+            ],
+            function(error) {
+              if (error) throw err;
+              console.log("Bid placed successfully!");
+              start();
+            }
+          );
+        }
+        else {
+          // bid wasn't high enough, so apologize and start over
+          console.log("Your bid was too low. Try again...");
+          start();
+        }
+      });
+  });
 };
 
-function updateManager(){
-
-};
 
 
