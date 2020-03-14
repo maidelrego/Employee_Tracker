@@ -219,69 +219,54 @@ function addEmployee() {
 };
 
 function updateRole(){
-  connection.query("SELECT * FROM employee", function(err, results) {
-    if (err) throw err;
+  connection.query("SELECT * FROM employee", function(err, results){
+    if(err){throw err};
     inquirer
-      .prompt([
-        {
-          name: "choice",
-          type: "rawlist",
-          choices: function() {
-            var choiceArray = [];
-            for (var i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].first_name);
-            }
-            return choiceArray;
-          },
-          message: "What Employee would you like to update role to?"
-        },
-        {
-          name: "choiceRole",
-          type: "rawlist",
-          choices: function() {
-            var choiceArray = [];
-            for (var i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].item_name);
-            }
-            return choiceArray;
-          },
-        }
-      ])
-      .then(function(answer) {
-        var chosenEmployee;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].item_name === answer.choice) {
-            chosenEmployee = results[i];
+    .prompt([
+      {
+        name: "choice",
+        type: "rawlist",
+        message: "What is the Employee's Role?",
+        choices: function () {
+          var choiceArray = [];
+          for (var i = 0; i < results.length; i++) {
+            choiceArray.push(results[i].first_name);
           }
+          return choiceArray;
         }
+      }
+    ]).then(function(nameList){
+      connection.query("SELECT title FROM role", function(err,results){
+        if (err) throw err;
+        inquirer
+          .prompt([
+            {
+              name: "choice",
+              type: "rawlist",
+              message: "What is the New Employee's Role?",
+              choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < results.length; i++) {
+                  choiceArray.push(results[i].title);
+                }
+                return choiceArray;
+              }
 
-        // determine if bid was high enough
-        if (chosenItem.highest_bid < parseInt(answer.bid)) {
-          // bid was high enough, so update db, let the user know, and start over
-          connection.query(
-            "UPDATE auctions SET ? WHERE ?",
-            [
+            }
+          ]).then(function(roleList){
+            connection.query("UPDATE employee SET ? WHERE ?", [
               {
-                highest_bid: answer.bid
+                role_id: roleList.choice
               },
               {
-                id: chosenItem.id
+                first_name: nameList.choice,
               }
-            ],
-            function(error) {
-              if (error) throw err;
-              console.log("Bid placed successfully!");
-              start();
-            }
-          );
-        }
-        else {
-          // bid wasn't high enough, so apologize and start over
-          console.log("Your bid was too low. Try again...");
-          start();
-        }
-      });
-  });
+            ])
+          })
+      })
+    })
+  })
+  
 };
 
 
